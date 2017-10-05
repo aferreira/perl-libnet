@@ -150,6 +150,8 @@ sub new {
     : defined $fire            ? $NetConfig{ftp_ext_passive}
     : $NetConfig{ftp_int_passive};    # Whew! :-)
 
+  ${*$ftp}{'net_ftp_prefer_epsv'} = 1 if $arg{PreferEPSV} && ${*$ftp}{'net_ftp_passive'};
+
   ${*$ftp}{net_ftp_tlsargs} = \%tlsargs if %tlsargs;
   if ($arg{SSL}) {
     ${*$ftp}{net_ftp_tlsprot} = 'P';
@@ -931,7 +933,7 @@ sub dir { shift->_list_cmd("LIST", @_); }
 sub pasv {
   my $ftp = shift;
   @_ and croak 'usage: $ftp->port()';
-  return $ftp->epsv if $ftp->sockdomain != AF_INET;
+  return $ftp->epsv if $ftp->sockdomain != AF_INET || ${*$ftp}{'net_ftp_prefer_epsv'};
   delete ${*$ftp}{net_ftp_intern_port};
 
   if ( $ftp->_PASV &&
